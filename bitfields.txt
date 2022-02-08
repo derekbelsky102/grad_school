@@ -1,0 +1,37 @@
+The following section can be copied into wavedrom editor to make a bitfield. 
+Wavedrom editor link: https://wavedrom.com/editor.html
+
+//Register Type:
+{reg : [
+ {bits: 6, name: 'opcode'},
+ {bits: 6, name: 'result'},
+ {bits: 6, name: 'source1'},
+ {bits: 6, name: 'source2'},
+ {bits: 6, name: '# of elements'},
+ {bits: 2, name: 'N/A'},
+]}
+
+//Register/Constant Type:
+{reg : [
+ {bits: 6, name: 'opcode'},
+ {bits: 6, name: 'result'},
+ {bits: 6, name: 'source1'},
+ {bits: 8, name: 'constant'},
+ {bits: 6, name: '# of elements'},
+]}
+
+//Constant Type 1:
+{reg : [
+ {bits: 6, name: 'opcode'},
+ {bits: 6, name: 'result'},
+ {bits: 14, name: 'constant/address'},
+ {bits: 6, name: '# of elements'},
+]}
+
+//Constant Type 2:
+{reg : [
+ {bits: 6, name: 'opcode'},
+ {bits: 6, name: 'result'},
+ {bits: 16, name: 'constant'},
+ {bits: 4, name: '# of elements'},
+]}
