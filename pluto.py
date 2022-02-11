@@ -2,7 +2,7 @@ def convertToInt(value):
    if value[0:2] == "0x":
       constant = int(value[2:], 16) 
    else:
-      constant = int(value, 16)
+      constant = int(value, 10)
    return constant
 
 
@@ -91,11 +91,14 @@ program=[
 "padd8 $0 $0 8 32"
 ]
 
+mode=int(input("Enter mode. \n 1: Run All \n 2: Step Through\n"))
+
 count = 0
 ctrl_en=0
 for code in program:
-   print("\n\n------ Running Instruction #",count,'------')
-   print("------",code,'------\n\n')
+   # This printing scheme could be cleaner. If there is time this can be improved. 
+   print("\n---------------------- Running Instruction #",count,"---------------------------")
+   print("----------------------",code,'-'*(50-int(len(code)))+'-'*(len(str(count))-1),'\n')
    x = code.split()
 
    command=x[0]
@@ -149,7 +152,7 @@ for code in program:
          elements = (int(x[3])-1) % 2**4
       elif x[0] == "pset16upr":
          result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
-         constant = int(int(x[2][2:], 16) / 2**16) # only upper 16 bits.
+         constant = int(convertToInt(x[2]) / 2**16) # only upper 16 bits.
          elements = (int(x[3])-1) % 2**4
       elif x[0] == "pctl":
          result = int(x[1])
@@ -164,7 +167,6 @@ for code in program:
    if ctrl_en == 1:
       control = ((registers[62] % 2**32) << 32) | (registers[63] % 2**32)
       ctrl_bits = list(map(int, list(bin(control)[2:])[::-1]))
-      print(ctrl_bits)
       elements=len(ctrl_bits)-1
    # Do operation
    for i in range(0, elements+1):
@@ -210,5 +212,7 @@ for code in program:
             registers[index] = int(registers[result+i] / registers[source2])
    print("Registers: ",registers)
    count = count + 1
+   if mode == 2:
+      input("\nHit Enter for Next Instruction\n")
 
 
