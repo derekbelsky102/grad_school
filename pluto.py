@@ -1,3 +1,11 @@
+def convertToInt(value):
+   if value[0:2] == "0x":
+      constant = int(value[2:], 16) 
+   else:
+      constant = int(value, 16)
+   return constant
+
+
 opcodes = { 
 # Integer operations
 "padd"        : 0,
@@ -73,10 +81,10 @@ program=[
 "pset16lwr $48 500077 16",
 "pset16upr $48 500077 16",
 "pset8 $0 $0 2 64",
-"pset16lwr $62 2863311530 1",
-"pset16upr $62 2863311530 1",
-"pset16lwr $63 2863311530 1",
-"pset16upr $63 2863311530 1",
+"pset16lwr $62 0xAAAAAAAA 1",
+"pset16upr $62 0xAAAAAAAA 1",
+"pset16lwr $63 0xAAAAAAAA 1",
+"pset16upr $63 0xAAAAAAAA 1",
 "pctl 1",
 "padd8 $0 $0 8 0",
 "pctl 0",
@@ -121,7 +129,8 @@ for code in program:
       if x[0] == "padd8" or x[0] == "psub8" or x[0] == "pmult8" or x[0] == "pdiv8" or x[0] == "pset8":
          result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
          source = int(x[2][1:]) % 2**6 # strip $ and treat as only 6 bits.
-         constant = int(x[3]) % 2**8 # treat as only 8 bits. 
+         # Handle constant as both hex and decimal
+         constant = convertToInt(x[3]) % 2**8 # treat as only 8 bits. 
       # TODO Add floating point. 
       elements = (int(x[4])-1) % 2**6
       
@@ -135,11 +144,12 @@ for code in program:
       opcode = opcodes[x[0]]
       if x[0] == "padd16" or x[0] == "psub16" or x[0] == "pmult16" or x[0] == "pdiv16" or x[0] == "pset16lwr":
          result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
-         constant = int(x[2]) % 2**16 # only lower 16 bits. 
+         # Handle constant as both hex and decimal
+         constant = convertToInt(x[2]) % 2**16 # treat as only 16 bits. 
          elements = (int(x[3])-1) % 2**4
       elif x[0] == "pset16upr":
          result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
-         constant = int(int(x[2]) / 2**16) # only upper 16 bits.
+         constant = int(int(x[2][2:], 16) / 2**16) # only upper 16 bits.
          elements = (int(x[3])-1) % 2**4
       elif x[0] == "pctl":
          result = int(x[1])
