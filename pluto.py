@@ -17,6 +17,7 @@ class Instruction:
       self.arg1 =  arg1
       self.opcode = opcode
       self.type = type
+      # 0 - add, 1 - sub, 2 - mult, 3 - div
       self.func = func
 
 instructions = {}
@@ -54,10 +55,9 @@ instructions[24] = Instruction("pand16lwr",  18,  '16bitImm', 0)
 instructions[25] = Instruction("pand16upr",  19,  '16bitImm', 0)
 instructions[26] = Instruction("por16lwr",   20,  '16bitImm', 0)
 instructions[27] = Instruction("por16upr",   21,  '16bitImm', 0)
-instructions[26] = Instruction("pnot16lwr",  22,  '16bitImm', 0)
-instructions[27] = Instruction("pnot16upr",  23,  '16bitImm', 0)
+instructions[28] = Instruction("pnot",       22,  '16bitImm', 0)
 
-# 24-31 for future instructions like branch operations. 
+# 23-31 for future instructions like branch operations. 
 # opcode is currently 5 bits. Exanding it to 6 bits will give 64 instructions, but
 # 1 bit for elements will need to be dropped which would decrease number of parellel operations
 # by a factor of 2. 
@@ -95,7 +95,13 @@ program=[
 "padd8 $0 $0 8 32",
 "pset8 $63 $0 0 1",
 "psw $0 $63 63 62",
-"plw $0 $63 0 62"
+"plw $0 $63 0 62",
+"padd8 $62 $0 0 2",
+"pand16lwr $0 0x00008000 32",
+"pand16upr $0 0x00008000 32",
+"por16lwr $0 0x0007A16D 32",
+"por16upr $0 0x0007A16D 32",
+"pnot $0 32"
 ]
 
 mode=int(input("Enter mode. \n 1: Run All \n 2: Step Through\n"))
@@ -145,6 +151,9 @@ for code in program:
       if currentInstruction.arg1 == "pctl":
          result = int(x[1])
          ctrl_en = result
+      elif currentInstruction.arg1 == "pnot":
+         result = int(x[1][1:])
+         elements = (int(x[2])-1) & 0x1F
       else:
          result = int(x[1][1:]) & 0x3F
          elements = (int(x[3])-1) & 0x1F
@@ -152,12 +161,11 @@ for code in program:
          constant = convertToInt(x[2])
       
       # Masking 16 lower bits
-      if currentInstruction.arg1 == "pset16lwr":
+      if currentInstruction.arg1 == "pset16lwr" or currentInstruction.arg1 == "padd16lwr" or currentInstruction.arg1 == "por16lwr" or currentInstruction.arg1 == "pnot16lwr":
          constant = constant & 0x0000FFFF
-         print(constant)
 
       # Masking 16 upper bits
-      if currentInstruction.arg1 == "pset16upr":
+      if currentInstruction.arg1 == "pset16upr" or currentInstruction.arg1 == "padd16upr" or currentInstruction.arg1 == "por16upr" or currentInstruction.arg1 == "pnot16upr":
          constant = constant & 0xFFFF0000
 
       # TODO Add floating point. 
@@ -217,6 +225,21 @@ for code in program:
             registers[index] = data[registers[source]+constant+i]
          elif currentInstruction.arg1 == "psw":
             data[registers[source]+constant+i] = registers[index]
+         elif currentInstruction.arg1 == "pshiftl":
+            registers[index] = registers[index] << constant
+         elif currentInstruction.arg1 == "pshiftr":
+            registers[index] = registers[index] >> constant
+         elif currentInstruction.arg1 == "pand16lwr":
+            registers[index] = registers[index] & (0xFFFF0000 | constant)
+         elif currentInstruction.arg1 == "pand16upr":
+            registers[index] = registers[index] & (0x0000FFFF | constant)
+         elif currentInstruction.arg1 == "por16lwr":
+            registers[index] = registers[index] | constant
+         elif currentInstruction.arg1 == "por16upr":
+            registers[index] = registers[index] | constant
+         elif currentInstruction.arg1 == "pnot":
+            registers[index] = ~registers[index]
+         
    print("\nRegisters: ",registers)
    
    print("\nData: ",data[0:256])
