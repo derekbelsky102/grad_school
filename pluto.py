@@ -5,54 +5,59 @@ def convertToInt(value):
       constant = int(value, 10)
    return constant
 
+def searchInstruction(string):
+   for i in range(0, len(instructions)):
+      if string == instructions[i].arg1:
+         return i
 
-opcodes = { 
+class Instruction:
+   def __init__(self, arg1, opcode, type, intOrFloat):
+      self.arg1 =  arg1
+      self.opcode = opcode
+      self.type = type
+      self.intOrFloat = intOrFloat
+
+instructions = {}
 # Integer operations
-"padd"        : 0,
-"padd8"       : 1,
-"padd16"      : 2,
-"paddreg"     : 3,
-"psub"        : 4,
-"psub8"       : 5,
-"psub16"      : 6,
-"psubreg"     : 7,
-"pmult"       : 8,
-"pmult8"      : 9,
-"pmult16"     : 10,
-"pmultreg"    : 11,
-"pdiv"        : 12,
-"pdiv8"       : 13,
-"pdiv16"      : 14,
-"pdivreg"     : 15,
-
+instructions[0]  = Instruction("padd",       0,   'register',  'int')
+instructions[1]  = Instruction("padd8",      1,   '8bitImm',   'int')
+instructions[2]  = Instruction("padd16",     2,   '16bitImm',  'int')
+instructions[3]  = Instruction("paddreg",    3,   'register',  'int')
+instructions[4]  = Instruction("psub",       4,   'register',  'int')
+instructions[5]  = Instruction("psub8",      5,   '8bitImm',   'int')
+instructions[6]  = Instruction("psub16",     6,   '16bitImm',  'int')
+instructions[7]  = Instruction("psubreg",    7,   'register',  'int')
+instructions[8]  = Instruction("pmult",      8,   'register',  'int')
+instructions[9]  = Instruction("pmult8",     9,   '8bitImm',   'int')
+instructions[10] = Instruction("pmult16",    10,  '16bitImm',  'int')
+instructions[11] = Instruction("pmultreg",   11,  'register',  'int')
+instructions[12] = Instruction("pdiv",       12,  'register',  'int')
+instructions[13] = Instruction("pdiv8",      13,  '8bitImm',   'int')
+instructions[14] = Instruction("pdiv16",     14,  '16bitImm',  'int')
+instructions[15] = Instruction("pdivreg",    15,  'register',  'int')
 # Set Operations
-"pset8"       : 33, #TODO Fix this!
-"pset16lwr"   : 16,
-"pset16upr"   : 17,
-"pfset16lwr"  : 18,
-"pfset16upr"  : 19,
-
+instructions[16] = Instruction("pset8",      16,  '8bitImm',   'int')
+instructions[17] = Instruction("pset16lwr",  17,  '16bitImm',  'int')
+instructions[18] = Instruction("pset16upr",  18,  '16bitImm',  'int')
+instructions[19] = Instruction("pfset16lwr", 19,  '16bitImm',  'float')
+instructions[20] = Instruction("pfset16upr", 20,  '16bitImm',  'float')
 # Float operations
-"pfadd"       : 20,
-"pfaddreg"    : 21,
-"pfsub"       : 22,
-"pfsubreg"    : 23,
-"pfmult"      : 24,
-"pfmultreg"   : 25,
-"pfdiv"       : 26,
-"pfdivreg"    : 27,
-
+instructions[21] = Instruction("pfadd",     21,  'register',  'float')
+instructions[22] = Instruction("pfaddreg",  22,  'register',  'float')
+instructions[23] = Instruction("pfsub",     23,  'register',  'float')
+instructions[24] = Instruction("pfsubreg",  24,  'register',  'float')
+instructions[25] = Instruction("pfmult",    25,  'register',  'float')
+instructions[26] = Instruction("pfmultreg", 26,  'register',  'float')
+instructions[27] = Instruction("pfdiv",     27,  'register',  'float')
+instructions[28] = Instruction("pfdivreg",  28,  'register',  'float')
 # Memory Access
-"plw"         : 28,
-"pflw"        : 29,
-"psw"         : 30,
-"pfsw"        : 31,
-
-# Control Datapath
-"pctl"        : 32
-
-# 33-63 for future instructions like branch operations. 
-}
+instructions[29] = Instruction("plw",       29,  '8bitImm',   'int')
+instructions[30] = Instruction("psw",       30,  '8bitImm',   'int')
+instructions[31] = Instruction("pflw",      31,  '8bitImm',   'float')
+instructions[32] = Instruction("pfsw",      32,  '8bitImm',   'float')
+# Control                                                     
+instructions[33] = Instruction("pctl",      33,  '16bitImm',  'none')
+# 34-63 for future instructions like branch operations. 
 
 # Register section
 registers = [0] * 64
@@ -105,36 +110,31 @@ for code in program:
    print("\n---------------------- Running Instruction #",count,"---------------------------")
    print("----------------------",code,'-'*(50-int(len(code)))+'-'*(len(str(count))-1),'\n')
    x = code.split()
-
-   command=x[0]
    
-   opcode=0
    result=0
    source1=0
    source2=0
    constant=0
    elements=0
    
+   currentInstruction = instructions[searchInstruction(x[0])]
+   
    # Register Type
-   ALU_Reg = ["padd", "psub", "pmult", "pdiv", "pfadd", "pfsub", "pfmult", "pfdiv", "paddreg", "psubreg", "pmultreg", "pdivreg", "pfaddreg", "pfsubreg", "pfmultreg", "pfdivreg"]
-   if x[0] in ALU_Reg :
-      opcode = opcodes[x[0]]
-      if x[0] == "padd" or x[0] == "psub" or x[0] == "pmult" or x[0] == "pdiv":
+   if currentInstruction.type == 'register':
+      if currentInstruction.intOrFloat == 'int':
          result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
          source1 = int(x[2][1:]) % 2**6 # strip $ and treat as only 6 bits.
          source2 = int(x[3][1:]) % 2**6 # strip $ and treat as only 6 bits. 
       # TODO Add floating point. 
       elements = (int(x[4])-1) % 2**6
       
-      code_32bit = opcode | result << 6 | source1 << 12 | source2 << 16 | elements << 24
+      code_32bit = currentInstruction.opcode | result << 6 | source1 << 12 | source2 << 16 | elements << 24
       print("Hex Format: "+hex(code_32bit)) 
       print("Bin Format: "+bin(code_32bit)) 
    
    # 8 bit immediate type
-   ALU_Const = ["padd8", "psub8", "pmult8", "pdiv8", "pset8", "plw", "psw"]
-   if x[0] in ALU_Const :
-      opcode = opcodes[x[0]]
-      if x[0] == "padd8" or x[0] == "psub8" or x[0] == "pmult8" or x[0] == "pdiv8" or x[0] == "pset8" or x[0] == "plw" or x[0] == "psw":
+   if currentInstruction.type == '8bitImm':
+      if currentInstruction.intOrFloat == 'int':
          result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
          source = int(x[2][1:]) % 2**6 # strip $ and treat as only 6 bits.
          # Handle constant as both hex and decimal
@@ -142,30 +142,28 @@ for code in program:
       # TODO Add floating point. 
       elements = (int(x[4])-1) % 2**6
       
-      code_32bit = opcode | result << 6 | source1 << 12 | constant << 18 | elements << 26
+      code_32bit = currentInstruction.opcode | result << 6 | source1 << 12 | constant << 18 | elements << 26
       print("Hex Format: "+hex(code_32bit)) 
       print("Bin Format: "+bin(code_32bit)) 
    
    # 16 bit immediate type
-   ALU_Ext_Const = ["padd16", "psub16", "pmult16", "pdiv16", "pset16lwr", "pset16upr", "pctl"]
-   if x[0] in ALU_Ext_Const :
-      opcode = opcodes[x[0]]
-      if x[0] == "padd16" or x[0] == "psub16" or x[0] == "pmult16" or x[0] == "pdiv16" or x[0] == "pset16lwr":
+   if currentInstruction.type == '16bitImm':
+      if currentInstruction.intOrFloat == 'int':
          result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
          # Handle constant as both hex and decimal
          constant = convertToInt(x[2]) % 2**16 # treat as only 16 bits. 
          elements = (int(x[3])-1) % 2**4
-      elif x[0] == "pset16upr":
-         result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
-         constant = int(convertToInt(x[2]) / 2**16) # only upper 16 bits.
-         elements = (int(x[3])-1) % 2**4
-      elif x[0] == "pctl":
+      elif currentInstruction.intOrFloat == 'none':
          result = int(x[1])
          ctrl_en = result
+
+      if currentInstruction.arg1 == "pset16upr":
+         constant = int(convertToInt(x[2]) / 2**16) # only upper 16 bits.
+
       # TODO Add floating point. 
       
       # Form 32bit code
-      code_32bit = opcode | result << 6 | constant << 12 | elements << 26
+      code_32bit = currentInstruction.opcode | result << 6 | constant << 12 | elements << 26
       print("Hex Format: "+hex(code_32bit))
       print("Bin Format: "+bin(code_32bit)) 
    
@@ -177,48 +175,47 @@ for code in program:
    for i in range(0, elements+1):
       if ctrl_en == 0 or (ctrl_en == 1 and ctrl_bits[i] == 1):
          index = result+i % 2**6 # Make sure index does not overflow
-         if x[0] == "padd" or x[0] == "pfadd": 
+         if currentInstruction.arg1 == "padd" or currentInstruction.arg1 == "pfadd": 
             registers[index] = registers[source1+i] + registers[source2+i]
-         elif x[0] == "psub" or x[0] == "pfsub":
+         elif currentInstruction.arg1 == "psub" or currentInstruction.arg1 == "pfsub":
             registers[index] = registers[source1+i] - registers[source2+i]
-         elif x[0] == "pmult" or x[0] == "pfmult":
+         elif currentInstruction.arg1 == "pmult" or currentInstruction.arg1 == "pfmult":
             registers[index] = registers[source1+i] * registers[source2+i]
-         elif x[0] == "pdiv" or x[0] == "pfdiv":
+         elif currentInstruction.arg1 == "pdiv" or currentInstruction.arg1 == "pfdiv":
             registers[index] = int(registers[source1+i] / registers[source2+i])
-         elif x[0] == "padd8" or x[0] == "pfadd8": 
+         elif currentInstruction.arg1 == "padd8" or currentInstruction.arg1 == "pfadd8": 
             registers[index] = registers[source+i] + constant
-         elif x[0] == "psub8" or x[0] == "pfsub8":
+         elif currentInstruction.arg1 == "psub8" or currentInstruction.arg1 == "pfsub8":
             registers[index] = registers[source+i] - constant
-         elif x[0] == "pmult8" or x[0] == "pfmult8":
+         elif currentInstruction.arg1 == "pmult8" or currentInstruction.arg1 == "pfmult8":
             registers[index] = registers[source+i] * constant
-         elif x[0] == "pdiv8" or x[0] == "pfdiv8":
+         elif currentInstruction.arg1 == "pdiv8" or currentInstruction.arg1 == "pfdiv8":
             registers[index] = int(registers[source+i] / constant)
-         elif x[0] == "padd16": 
+         elif currentInstruction.arg1 == "padd16": 
             registers[index] = registers[result+i] + constant
-         elif x[0] == "psub16":
+         elif currentInstruction.arg1 == "psub16":
             registers[index] = registers[result+i] - constant
-         elif x[0] == "pmult16":
+         elif currentInstruction.arg1 == "pmult16":
             registers[index] = registers[result+i] * constant
-         elif x[0] == "pdiv16":
+         elif currentInstruction.arg1 == "pdiv16":
             registers[index] = int(registers[result+i] / constant)
-         elif x[0] == "pset8":
+         elif currentInstruction.arg1 == "pset8":
             registers[index] = constant
-         elif x[0] == "pset16lwr":
+         elif currentInstruction.arg1 == "pset16lwr":
             registers[index] = constant
-         elif x[0] == "pset16upr":
+         elif currentInstruction.arg1 == "pset16upr":
             registers[index] = (constant << 16) + registers[result+i] % 2**16
-         elif x[0] == "paddreg" or x[0] == "pfaddreg": 
+         elif currentInstruction.arg1 == "paddreg" or currentInstruction.arg1 == "pfaddreg": 
             registers[index] = registers[result+i] + registers[source2]
-         elif x[0] == "psubreg" or x[0] == "pfsubreg":
+         elif currentInstruction.arg1 == "psubreg" or currentInstruction.arg1 == "pfsubreg":
             registers[index] = registers[result+i] - registers[source2]
-         elif x[0] == "pmultreg" or x[0] == "pfmultreg":
+         elif currentInstruction.arg1 == "pmultreg" or currentInstruction.arg1 == "pfmultreg":
             registers[index] = registers[result+i] * registers[source2]
-         elif x[0] == "pdivreg" or x[0] == "pfdivreg":
+         elif currentInstruction.arg1 == "pdivreg" or currentInstruction.arg1 == "pfdivreg":
             registers[index] = int(registers[result+i] / registers[source2])
-         elif x[0] == "plw":
+         elif currentInstruction.arg1 == "plw":
             registers[index] = data[registers[source]+constant+i]
-         elif x[0] == "psw":
-            print("index",source+constant+i) 
+         elif currentInstruction.arg1 == "psw":
             data[registers[source]+constant+i] = registers[index]
    print("\nRegisters: ",registers)
    
