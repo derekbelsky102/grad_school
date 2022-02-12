@@ -175,13 +175,13 @@ for code in program:
    for i in range(0, elements+1):
       if ctrl_en == 0 or (ctrl_en == 1 and ctrl_bits[i] == 1):
          index = result+i % 2**6 # Make sure index does not overflow
-         if currentInstruction.arg1 == "padd" or currentInstruction.arg1 == "pfadd": 
+         if currentInstruction.arg1 == "padd": 
             registers[index] = registers[source1+i] + registers[source2+i]
-         elif currentInstruction.arg1 == "psub" or currentInstruction.arg1 == "pfsub":
+         elif currentInstruction.arg1 == "psub":
             registers[index] = registers[source1+i] - registers[source2+i]
-         elif currentInstruction.arg1 == "pmult" or currentInstruction.arg1 == "pfmult":
+         elif currentInstruction.arg1 == "pmult":
             registers[index] = registers[source1+i] * registers[source2+i]
-         elif currentInstruction.arg1 == "pdiv" or currentInstruction.arg1 == "pfdiv":
+         elif currentInstruction.arg1 == "pdiv":
             registers[index] = int(registers[source1+i] / registers[source2+i])
          elif currentInstruction.arg1 == "padd8":
             registers[index] = registers[source+i] + constant
@@ -201,17 +201,17 @@ for code in program:
             registers[index] = int(registers[result+i] / constant)
          elif currentInstruction.arg1 == "pset8":
             registers[index] = constant
-         elif currentInstruction.arg1 == "pset16lwr" or currentInstruction.arg1 == "pfset16lwr":
+         elif currentInstruction.arg1 == "pset16lwr":
             registers[index] = constant
-         elif currentInstruction.arg1 == "pset16upr" or currentInstruction.arg1 == "pfset16upr":
+         elif currentInstruction.arg1 == "pset16upr":
             registers[index] = constant + (registers[result+i]  & 0x0000FFFF)
-         elif currentInstruction.arg1 == "paddreg" or currentInstruction.arg1 == "pfaddreg": 
+         elif currentInstruction.arg1 == "paddreg": 
             registers[index] = registers[result+i] + registers[source2]
-         elif currentInstruction.arg1 == "psubreg" or currentInstruction.arg1 == "pfsubreg":
+         elif currentInstruction.arg1 == "psubreg":
             registers[index] = registers[result+i] - registers[source2]
-         elif currentInstruction.arg1 == "pmultreg" or currentInstruction.arg1 == "pfmultreg":
+         elif currentInstruction.arg1 == "pmultreg":
             registers[index] = registers[result+i] * registers[source2]
-         elif currentInstruction.arg1 == "pdivreg" or currentInstruction.arg1 == "pfdivreg":
+         elif currentInstruction.arg1 == "pdivreg":
             registers[index] = int(registers[result+i] / registers[source2])
          elif currentInstruction.arg1 == "plw":
             registers[index] = data[registers[source]+constant+i]
