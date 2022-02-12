@@ -1,3 +1,5 @@
+import struct
+
 def convertToInt(value):
    if value[0:2] == "0x":
       constant = int(value[2:], 16) 
@@ -11,53 +13,54 @@ def searchInstruction(string):
          return i
 
 class Instruction:
-   def __init__(self, arg1, opcode, type, intOrFloat):
+   def __init__(self, arg1, opcode, type, func):
       self.arg1 =  arg1
       self.opcode = opcode
       self.type = type
-      self.intOrFloat = intOrFloat
+      self.func = func
 
 instructions = {}
-# Integer operations
-instructions[0]  = Instruction("padd",       0,   'register',  'int')
-instructions[1]  = Instruction("padd8",      1,   '8bitImm',   'int')
-instructions[2]  = Instruction("padd16",     2,   '16bitImm',  'int')
-instructions[3]  = Instruction("paddreg",    3,   'register',  'int')
-instructions[4]  = Instruction("psub",       4,   'register',  'int')
-instructions[5]  = Instruction("psub8",      5,   '8bitImm',   'int')
-instructions[6]  = Instruction("psub16",     6,   '16bitImm',  'int')
-instructions[7]  = Instruction("psubreg",    7,   'register',  'int')
-instructions[8]  = Instruction("pmult",      8,   'register',  'int')
-instructions[9]  = Instruction("pmult8",     9,   '8bitImm',   'int')
-instructions[10] = Instruction("pmult16",    10,  '16bitImm',  'int')
-instructions[11] = Instruction("pmultreg",   11,  'register',  'int')
-instructions[12] = Instruction("pdiv",       12,  'register',  'int')
-instructions[13] = Instruction("pdiv8",      13,  '8bitImm',   'int')
-instructions[14] = Instruction("pdiv16",     14,  '16bitImm',  'int')
-instructions[15] = Instruction("pdivreg",    15,  'register',  'int')
+# Register Arithmetic operations
+instructions[0]  = Instruction("padd",       0,   'register', 0)
+instructions[1]  = Instruction("psub",       0,   'register', 1)
+instructions[2]  = Instruction("pmult",      0,   'register', 2)
+instructions[3]  = Instruction("pdiv",       0,   'register', 3)
+instructions[4]  = Instruction("paddreg",    1,   'register', 0)
+instructions[5]  = Instruction("psubreg",    1,   'register', 1)
+instructions[6]  = Instruction("pmultreg",   1,   'register', 2)
+instructions[7]  = Instruction("pdivreg",    1,   'register', 3)
+# Constant Arithmetic operations
+instructions[8]  = Instruction("padd8",      2,   '8bitImm',  0)
+instructions[9]  = Instruction("padd16",     3,   '16bitImm', 0)
+instructions[10] = Instruction("psub8",      4,   '8bitImm',  0)
+instructions[11] = Instruction("psub16",     5,   '16bitImm', 0)
+instructions[12] = Instruction("pmult8",     6,   '8bitImm',  0)
+instructions[13] = Instruction("pmult16",    7,   '16bitImm', 0)
+instructions[14] = Instruction("pdiv8",      8,   '8bitImm',  0)
+instructions[15] = Instruction("pdiv16",     9,   '16bitImm', 0)
 # Set Operations
-instructions[16] = Instruction("pset8",      16,  '8bitImm',   'int')
-instructions[17] = Instruction("pset16lwr",  17,  '16bitImm',  'int')
-instructions[18] = Instruction("pset16upr",  18,  '16bitImm',  'int')
-instructions[19] = Instruction("pfset16lwr", 19,  '16bitImm',  'float')
-instructions[20] = Instruction("pfset16upr", 20,  '16bitImm',  'float')
-# Float operations
-instructions[21] = Instruction("pfadd",     21,  'register',  'float')
-instructions[22] = Instruction("pfaddreg",  22,  'register',  'float')
-instructions[23] = Instruction("pfsub",     23,  'register',  'float')
-instructions[24] = Instruction("pfsubreg",  24,  'register',  'float')
-instructions[25] = Instruction("pfmult",    25,  'register',  'float')
-instructions[26] = Instruction("pfmultreg", 26,  'register',  'float')
-instructions[27] = Instruction("pfdiv",     27,  'register',  'float')
-instructions[28] = Instruction("pfdivreg",  28,  'register',  'float')
+instructions[16] = Instruction("pset8",      10,  '8bitImm',  0)
+instructions[17] = Instruction("pset16lwr",  11,  '16bitImm', 0)
+instructions[18] = Instruction("pset16upr",  12,  '16bitImm', 0)
 # Memory Access
-instructions[29] = Instruction("plw",       29,  '8bitImm',   'int')
-instructions[30] = Instruction("psw",       30,  '8bitImm',   'int')
-instructions[31] = Instruction("pflw",      31,  '8bitImm',   'float')
-instructions[32] = Instruction("pfsw",      32,  '8bitImm',   'float')
-# Control                                                     
-instructions[33] = Instruction("pctl",      33,  '16bitImm',  'none')
-# 34-63 for future instructions like branch operations. 
+instructions[19] = Instruction("plw",        13,  '8bitImm',  0)
+instructions[20] = Instruction("psw",        14,  '8bitImm',  0)
+# Control
+instructions[21] = Instruction("pctl",       15,  '16bitImm', 0)
+# Bitwise Operations
+instructions[22] = Instruction("pshiftl",    16,  '8bitImm',  0)
+instructions[23] = Instruction("pshiftr",    17,  '8bitImm',  0)
+instructions[24] = Instruction("pand16lwr",  18,  '16bitImm', 0)
+instructions[25] = Instruction("pand16upr",  19,  '16bitImm', 0)
+instructions[26] = Instruction("por16lwr",   20,  '16bitImm', 0)
+instructions[27] = Instruction("por16upr",   21,  '16bitImm', 0)
+instructions[26] = Instruction("pnot16lwr",  22,  '16bitImm', 0)
+instructions[27] = Instruction("pnot16upr",  23,  '16bitImm', 0)
+
+# 24-31 for future instructions like branch operations. 
+# opcode is currently 5 bits. Exanding it to 6 bits will give 64 instructions, but
+# 1 bit for elements will need to be dropped which would decrease number of parellel operations
+# by a factor of 2. 
 
 # Register section
 registers = [0] * 64
@@ -66,25 +69,19 @@ registers = [0] * 64
 data = [0] * 2048
 
 # To set all 64 register to 0-255, it takes one instructions
-# To set all 64 register to255-2^16-1, it takes four instructions
-# To set all 64 register to 2^16-1 - 2^32-1, it takes eight instructions
+# To set all 64 register to255-2^16-1, it takes two instructions
+# To set all 64 register to 2^16-1 - 2^32-1, it takes four instructions
 
 program=[
 "pset8 $0 $0 2 64",
-"pset16lwr $0 2048 16",
-"pset16lwr $16 2048 16",
-"pset16lwr $32 2048 16",
-"pset16lwr $48 2048 16",
+"pset16lwr $0 2048 32",
+"pset16lwr $32 2048 32",
 "padd $0 $0 $0 64",
 "pmult $0 $0 $0 64",
-"pset16lwr $0 500077 16",
-"pset16upr $0 500077 16",
-"pset16lwr $16 500077 16",
-"pset16upr $16 500077 16",
-"pset16lwr $32 500077 16",
-"pset16upr $32 500077 16",
-"pset16lwr $48 500077 16",
-"pset16upr $48 500077 16",
+"pset16lwr $0 500077 32",
+"pset16upr $0 500077 32",
+"pset16lwr $32 500077 32",
+"pset16upr $32 500077 32",
 "pset8 $63 $0 0 1",
 "psw $0 $63 0 63",
 "pset8 $0 $0 2 64",
@@ -118,57 +115,60 @@ for code in program:
    elements=0
    
    currentInstruction = instructions[searchInstruction(x[0])]
+   opcode = currentInstruction.opcode & 0x1F # mask 5 lower bits 
    
    # Register Type
    if currentInstruction.type == 'register':
-      if currentInstruction.intOrFloat == 'int':
-         result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
-         source1 = int(x[2][1:]) % 2**6 # strip $ and treat as only 6 bits.
-         source2 = int(x[3][1:]) % 2**6 # strip $ and treat as only 6 bits. 
-      # TODO Add floating point. 
-      elements = (int(x[4])-1) % 2**6
+      result = int(x[1][1:]) & 0x3F  # strip $ and mask 6 lower bits
+      source1 = int(x[2][1:]) & 0x3F # strip $ and mask 6 lower bits
+      source2 = int(x[3][1:]) & 0x3F # strip $ and mask 6 lower bits
+      elements = (int(x[4])-1) & 0x3F # mask 6 lower bits
       
-      code_32bit = currentInstruction.opcode | result << 6 | source1 << 12 | source2 << 16 | elements << 24
+      code_32bit = opcode | result << 6 | source1 << 12 | source2 << 16 | elements << 24 | currentInstruction.func << 30
       print("Hex Format: "+hex(code_32bit)) 
       print("Bin Format: "+bin(code_32bit)) 
    
    # 8 bit immediate type
    if currentInstruction.type == '8bitImm':
-      if currentInstruction.intOrFloat == 'int':
-         result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
-         source = int(x[2][1:]) % 2**6 # strip $ and treat as only 6 bits.
-         # Handle constant as both hex and decimal
-         constant = convertToInt(x[3]) % 2**8 # treat as only 8 bits. 
-      # TODO Add floating point. 
-      elements = (int(x[4])-1) % 2**6
+      result = int(x[1][1:]) & 0x3F 
+      source = int(x[2][1:]) & 0x3F 
+      # Handle constant as both hex and decimal
+      constant = convertToInt(x[3]) & 0xFF 
+      elements = (int(x[4])-1) & 0x3F 
       
-      code_32bit = currentInstruction.opcode | result << 6 | source1 << 12 | constant << 18 | elements << 26
+      code_32bit = opcode | result << 6 | source1 << 12 | constant << 18 | elements << 26
       print("Hex Format: "+hex(code_32bit)) 
       print("Bin Format: "+bin(code_32bit)) 
    
    # 16 bit immediate type
    if currentInstruction.type == '16bitImm':
-      if currentInstruction.intOrFloat == 'int':
-         result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
-         # Handle constant as both hex and decimal
-         constant = convertToInt(x[2]) % 2**16 # treat as only 16 bits. 
-         elements = (int(x[3])-1) % 2**4
-      elif currentInstruction.intOrFloat == 'none':
+      if currentInstruction.arg1 == "pctl":
          result = int(x[1])
          ctrl_en = result
+      else:
+         result = int(x[1][1:]) & 0x3F
+         elements = (int(x[3])-1) & 0x1F
+         # Handle constant as both hex and decimal
+         constant = convertToInt(x[2])
+      
+      # Masking 16 lower bits
+      if currentInstruction.arg1 == "pset16lwr":
+         constant = constant & 0x0000FFFF
+         print(constant)
 
+      # Masking 16 upper bits
       if currentInstruction.arg1 == "pset16upr":
-         constant = int(convertToInt(x[2]) / 2**16) # only upper 16 bits.
+         constant = constant & 0xFFFF0000
 
       # TODO Add floating point. 
       
       # Form 32bit code
-      code_32bit = currentInstruction.opcode | result << 6 | constant << 12 | elements << 26
+      code_32bit = opcode | result << 6 | constant << 12 | elements << 26
       print("Hex Format: "+hex(code_32bit))
       print("Bin Format: "+bin(code_32bit)) 
    
    if ctrl_en == 1:
-      control = ((registers[62] % 2**32) << 32) | (registers[63] % 2**32)
+      control = ((registers[62] & 0xFFFFFFFF ) << 32) | (registers[63] & 0xFFFFFFFF)
       ctrl_bits = list(map(int, list(bin(control)[2:])[::-1]))
       elements=len(ctrl_bits)-1
    # Do operation
@@ -183,13 +183,13 @@ for code in program:
             registers[index] = registers[source1+i] * registers[source2+i]
          elif currentInstruction.arg1 == "pdiv" or currentInstruction.arg1 == "pfdiv":
             registers[index] = int(registers[source1+i] / registers[source2+i])
-         elif currentInstruction.arg1 == "padd8" or currentInstruction.arg1 == "pfadd8": 
+         elif currentInstruction.arg1 == "padd8":
             registers[index] = registers[source+i] + constant
-         elif currentInstruction.arg1 == "psub8" or currentInstruction.arg1 == "pfsub8":
+         elif currentInstruction.arg1 == "psub8":
             registers[index] = registers[source+i] - constant
-         elif currentInstruction.arg1 == "pmult8" or currentInstruction.arg1 == "pfmult8":
+         elif currentInstruction.arg1 == "pmult8":
             registers[index] = registers[source+i] * constant
-         elif currentInstruction.arg1 == "pdiv8" or currentInstruction.arg1 == "pfdiv8":
+         elif currentInstruction.arg1 == "pdiv8":
             registers[index] = int(registers[source+i] / constant)
          elif currentInstruction.arg1 == "padd16": 
             registers[index] = registers[result+i] + constant
@@ -201,10 +201,10 @@ for code in program:
             registers[index] = int(registers[result+i] / constant)
          elif currentInstruction.arg1 == "pset8":
             registers[index] = constant
-         elif currentInstruction.arg1 == "pset16lwr":
+         elif currentInstruction.arg1 == "pset16lwr" or currentInstruction.arg1 == "pfset16lwr":
             registers[index] = constant
-         elif currentInstruction.arg1 == "pset16upr":
-            registers[index] = (constant << 16) + registers[result+i] % 2**16
+         elif currentInstruction.arg1 == "pset16upr" or currentInstruction.arg1 == "pfset16upr":
+            registers[index] = constant + (registers[result+i]  & 0x0000FFFF)
          elif currentInstruction.arg1 == "paddreg" or currentInstruction.arg1 == "pfaddreg": 
             registers[index] = registers[result+i] + registers[source2]
          elif currentInstruction.arg1 == "psubreg" or currentInstruction.arg1 == "pfsubreg":
