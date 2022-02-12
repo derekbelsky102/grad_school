@@ -80,6 +80,8 @@ program=[
 "pset16upr $32 500077 16",
 "pset16lwr $48 500077 16",
 "pset16upr $48 500077 16",
+"pset8 $63 $0 0 1",
+"psw $0 $63 0 63",
 "pset8 $0 $0 2 64",
 "pset16lwr $62 0xAAAAAAAA 1",
 "pset16upr $62 0xAAAAAAAA 1",
@@ -88,7 +90,10 @@ program=[
 "pctl 1",
 "padd8 $0 $0 8 0",
 "pctl 0",
-"padd8 $0 $0 8 32"
+"padd8 $0 $0 8 32",
+"pset8 $63 $0 0 1",
+"psw $0 $63 63 62",
+"plw $0 $63 0 62"
 ]
 
 mode=int(input("Enter mode. \n 1: Run All \n 2: Step Through\n"))
@@ -126,10 +131,10 @@ for code in program:
       print("Bin Format: "+bin(code_32bit)) 
    
    # 8 bit immediate type
-   ALU_Const = ["padd8", "psub8", "pmult8", "pdiv8", "pset8"]
+   ALU_Const = ["padd8", "psub8", "pmult8", "pdiv8", "pset8", "plw", "psw"]
    if x[0] in ALU_Const :
       opcode = opcodes[x[0]]
-      if x[0] == "padd8" or x[0] == "psub8" or x[0] == "pmult8" or x[0] == "pdiv8" or x[0] == "pset8":
+      if x[0] == "padd8" or x[0] == "psub8" or x[0] == "pmult8" or x[0] == "pdiv8" or x[0] == "pset8" or x[0] == "plw" or x[0] == "psw":
          result = int(x[1][1:]) % 2**6 # strip $ and treat as only 6 bits. 
          source = int(x[2][1:]) % 2**6 # strip $ and treat as only 6 bits.
          # Handle constant as both hex and decimal
@@ -210,7 +215,14 @@ for code in program:
             registers[index] = registers[result+i] * registers[source2]
          elif x[0] == "pdivreg" or x[0] == "pfdivreg":
             registers[index] = int(registers[result+i] / registers[source2])
-   print("Registers: ",registers)
+         elif x[0] == "plw":
+            registers[index] = data[registers[source]+constant+i]
+         elif x[0] == "psw":
+            print("index",source+constant+i) 
+            data[registers[source]+constant+i] = registers[index]
+   print("\nRegisters: ",registers)
+   
+   print("\nData: ",data[0:256])
    count = count + 1
    if mode == 2:
       input("\nHit Enter for Next Instruction\n")
