@@ -32,12 +32,12 @@ instructions[6]  = Instruction("pmultreg",   1,   'register', 2)
 instructions[7]  = Instruction("pdivreg",    1,   'register', 3)
 # Constant Arithmetic operations
 instructions[8]  = Instruction("padd8",      2,   '8bitImm',  0)
-instructions[9]  = Instruction("padd16",     3,   '16bitImm', 0)
-instructions[10] = Instruction("psub8",      4,   '8bitImm',  0)
-instructions[11] = Instruction("psub16",     5,   '16bitImm', 0)
-instructions[12] = Instruction("pmult8",     6,   '8bitImm',  0)
-instructions[13] = Instruction("pmult16",    7,   '16bitImm', 0)
-instructions[14] = Instruction("pdiv8",      8,   '8bitImm',  0)
+instructions[9]  = Instruction("psub8",      3,   '8bitImm',  0)
+instructions[10] = Instruction("pmult8",     4,   '8bitImm',  0)
+instructions[11] = Instruction("pdiv8",      5,   '8bitImm',  0)
+instructions[12] = Instruction("padd16",     6,   '16bitImm', 0)
+instructions[13] = Instruction("psub16",     7,   '16bitImm', 0)
+instructions[14] = Instruction("pmult16",    8,   '16bitImm', 0)
 instructions[15] = Instruction("pdiv16",     9,   '16bitImm', 0)
 # Set Operations
 instructions[16] = Instruction("pset8",      10,  '8bitImm',  0)
@@ -119,6 +119,7 @@ for code in program:
    source2=0
    constant=0
    elements=0
+   code_32bit =0
    
    currentInstruction = instructions[searchInstruction(x[0])]
    opcode = currentInstruction.opcode & 0x1F # mask 5 lower bits 
@@ -130,9 +131,8 @@ for code in program:
       source2 = int(x[3][1:]) & 0x3F # strip $ and mask 6 lower bits
       elements = (int(x[4])-1) & 0x3F # mask 6 lower bits
       
-      code_32bit = opcode | result << 6 | source1 << 12 | source2 << 16 | elements << 24 | currentInstruction.func << 30
-      print("Hex Format: "+hex(code_32bit)) 
-      print("Bin Format: "+bin(code_32bit)) 
+      code_32bit = opcode | result << 5 | source1 << 11 | source2 << 17 | elements << 23 | currentInstruction.func << 29
+
    
    # 8 bit immediate type
    if currentInstruction.type == '8bitImm':
@@ -142,9 +142,7 @@ for code in program:
       constant = convertToInt(x[3]) & 0xFF 
       elements = (int(x[4])-1) & 0x3F 
       
-      code_32bit = opcode | result << 6 | source1 << 12 | constant << 18 | elements << 26
-      print("Hex Format: "+hex(code_32bit)) 
-      print("Bin Format: "+bin(code_32bit)) 
+      code_32bit = opcode | result << 5 | source1 << 11 | constant << 17 | elements << 25 | currentInstruction.func << 31
    
    # 16 bit immediate type
    if currentInstruction.type == '16bitImm':
@@ -166,14 +164,14 @@ for code in program:
 
       # Masking 16 upper bits
       if currentInstruction.arg1 == "pset16upr" or currentInstruction.arg1 == "padd16upr" or currentInstruction.arg1 == "por16upr" or currentInstruction.arg1 == "pnot16upr":
-         constant = constant & 0xFFFF0000
-
-      # TODO Add floating point. 
+         upr_constant = constant & 0xFFFF0000
+         constant = upr_constant >> 16
       
       # Form 32bit code
-      code_32bit = opcode | result << 6 | constant << 12 | elements << 26
-      print("Hex Format: "+hex(code_32bit))
-      print("Bin Format: "+bin(code_32bit)) 
+      code_32bit = opcode | result << 5 | constant << 11 | elements << 27
+   
+   print("Hex Format: 0x"+'{:08X}'.format(code_32bit)) 
+   print("Bin Format: 0b"+'{:032b}'.format(code_32bit))
    
    if ctrl_en == 1:
       control = ((registers[62] & 0xFFFFFFFF ) << 32) | (registers[63] & 0xFFFFFFFF)
@@ -212,7 +210,7 @@ for code in program:
          elif currentInstruction.arg1 == "pset16lwr":
             registers[index] = constant
          elif currentInstruction.arg1 == "pset16upr":
-            registers[index] = constant + (registers[result+i]  & 0x0000FFFF)
+            registers[index] = upr_constant + (registers[result+i]  & 0x0000FFFF)
          elif currentInstruction.arg1 == "paddreg": 
             registers[index] = registers[result+i] + registers[source2]
          elif currentInstruction.arg1 == "psubreg":
@@ -232,11 +230,11 @@ for code in program:
          elif currentInstruction.arg1 == "pand16lwr":
             registers[index] = registers[index] & (0xFFFF0000 | constant)
          elif currentInstruction.arg1 == "pand16upr":
-            registers[index] = registers[index] & (0x0000FFFF | constant)
+            registers[index] = registers[index] & (0x0000FFFF | upr_constant)
          elif currentInstruction.arg1 == "por16lwr":
             registers[index] = registers[index] | constant
          elif currentInstruction.arg1 == "por16upr":
-            registers[index] = registers[index] | constant
+            registers[index] = registers[index] | upr_constant
          elif currentInstruction.arg1 == "pnot":
             registers[index] = ~registers[index]
          

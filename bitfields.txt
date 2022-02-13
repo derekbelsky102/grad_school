@@ -3,12 +3,12 @@ Wavedrom editor link: https://wavedrom.com/editor.html
 
 //Register Type:
 {reg : [
- {bits: 6, name: 'opcode'},
+ {bits: 5, name: 'opcode'},
  {bits: 6, name: 'result'},
  {bits: 6, name: 'source1'},
  {bits: 6, name: 'source2'},
  {bits: 6, name: '# of elements'},
- {bits: 2, name: 'N/A'},
+ {bits: 3, name: 'func'},
 ]}
 
 //Register/Constant Type:
@@ -17,21 +17,14 @@ Wavedrom editor link: https://wavedrom.com/editor.html
  {bits: 6, name: 'result'},
  {bits: 6, name: 'source1'},
  {bits: 8, name: 'constant'},
- {bits: 6, name: '# of elements'},
-]}
-
-//Constant Type 1:
-{reg : [
- {bits: 6, name: 'opcode'},
- {bits: 6, name: 'result'},
- {bits: 14, name: 'constant/address'},
- {bits: 6, name: '# of elements'},
+ {bits: 5, name: '# of elements'},
+ {bits: 1, name: 'func'}
 ]}
 
 //Constant Type 2:
 {reg : [
- {bits: 6, name: 'opcode'},
+ {bits: 5, name: 'opcode'},
  {bits: 6, name: 'result'},
  {bits: 16, name: 'constant'},
- {bits: 4, name: '# of elements'},
+ {bits: 5, name: '# of elements'},
 ]}
