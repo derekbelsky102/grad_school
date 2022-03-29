@@ -5,13 +5,20 @@ spaces=""
 insertStall=0
 count=1
 previousLines=0
+previousInstruction="NA"
 solution_type=input("Enter Solution Type 1, 2 or 3 ")
 with open(file, 'r') as program:
     for code in program:
       
-      x = code.split()
-      
+      # Not a huge fan of this solution but it split args by spaces and commas and should be robust. 
+      a = [a.strip() for a in code.split(',')]
+      list1=a[0].split()
+      del a[0]
+      list2=a
+      x=list1+list2
+
       if x[0] == "add" or x[0] == "sub":
+         
          result =  (x[1][1:])
          source1 = (x[2][1:])
          source2 = (x[3][1:])
@@ -63,11 +70,19 @@ with open(file, 'r') as program:
       
       potentialHazards.append(result)
       del potentialHazards[0] 
-      if solution_type=='2' and insertStall==0:
+      # Only Case we can see a stall... I think...
+      if solution_type == '3' and previousInstruction == "lw" and (source1 == potentialHazards[1] or source2 == potentialHazards[1]):
+         del potentialHazards[0]
+         potentialHazards.append("NA")
+         print(spaces+"F S D X M W")
+         spaces=spaces+"  "
+      elif (solution_type=='2' and insertStall == 0) or solution_type == '3':
          print(spaces+"F D X M W")
+
       spaces=spaces+"  "  
       insertStall=0
       count = count + 1
+      previousInstruction = x[0]
    
 
 
